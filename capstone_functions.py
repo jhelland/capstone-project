@@ -9,6 +9,7 @@ Package of functions for MATH 482
 import numpy as np
 import scipy as sp
 import scipy.stats as stats
+import scipy.linalg as la
 import pandas as pd
 import timeit
 
@@ -40,7 +41,12 @@ def get_C(x, y):
     return np.mean(np.log(y)) - get_k(x, y)*(np.mean(x) - x[0])
 
 
-def apply(x, fn):
+def apply(_x, fn, axis=0):
+    if axis:
+        x = _x.T
+    else:
+        x = _x
+
     if len(x.shape) == 1:
         return fn(x)
     else:
@@ -49,7 +55,7 @@ def apply(x, fn):
     for i in range(x.shape[0]):
         output[i] = fn(x[i])
 
-    return output
+    return output.T if axis else output
 
 
 def get_estimators(x, y, clearance=3):
@@ -343,30 +349,63 @@ def get_cis2(sampleA, sampleB, origA, origB):
 
     return cis
 
+# Generate Normal Data
+def generateNormal(meansA, covAB, r1, r2, n):
+    rmat = np.random.multivariate_normal(np.zeros(16), covAB, n)
+
+    for k in range(8):
+        rmat[:, k] = rmat[:, k] + meansA[k]
+
+    for k in range(9, 12):
+        rmat[:, k] = rmat[:, k] + meansA[k - 8] + np.log(r1)
+    for k in range(13, 16):
+        rmat[:, k] = rmat[:, k] + meansA[4] - r2 * (meansA[4] - meansA[k - 8]) + np.log(r1)
+
+    rmat = np.exp(rmat)
+    return rmat
+
+# Generate Skewed Data
+def generateSkewed(meansA, covAB, r1, r2, n):
+    rmat = np.random.multivariate_normal(np.zeros(16), np.identity(16), size=n)
+
+    rmat = rmat**2
+    rmat = 0.5 * rmat - 0.5
+    rmat = rmat @ la.sqrtm(covAB)
+
+    for k in range(8):
+        rmat[:, k] = rmat[:, k] + meansA[k]
+    for k in range(9, 12):
+        rmat[:, k] = rmat[:, k] + meansA[k - 8] + np.log(r1)
+    for k in range(13, 16):
+        rmat[:, k] = rmat[:, k] + meansA[4] - r2 * (meansA[4] - meansA[k - 8]) + np.log(r1)
+
+    rmat = np.exp(rmat)
+    return rmat
+
 """
 if __name__ == '__main__':
 
-    tretA = pd.read_csv('http://www.mines.edu/~wnavidi/math482/tretinoinA',
-                        delim_whitespace=True)
-    tretB = pd.read_csv('http://inside.mines.edu/~wnavidi/math482/tretinoinB',
-                        delim_whitespace=True)
-    dataA = tretA.as_matrix()
-    dataB = tretB.as_matrix()
-    dataA[dataA == 0] = 3.0
-    dataB[dataB == 0] = 3.0
-    times = np.array([.25, .5, 1.0, 1.5, 4.5, 7.5, 10.5, 13.5])
+tretA = pd.read_csv('http://www.mines.edu/~wnavidi/math482/tretinoinA',
+                    delim_whitespace=True)
+tretB = pd.read_csv('http://inside.mines.edu/~wnavidi/math482/tretinoinB',
+                    delim_whitespace=True)
+dataA = tretA.as_matrix()
+dataB = tretB.as_matrix()
+dataA[dataA == 0] = 3.0
+dataB[dataB == 0] = 3.0
+times = np.array([.25, .5, 1.0, 1.5, 4.5, 7.5, 10.5, 13.5])
 
-    data = np.concatenate([dataA[:, 3:], dataB[:, 3:]], axis=1)
+data = np.concatenate([dataA[:, 3:], dataB[:, 3:]], axis=1)
 
-    n = 10000
-    perm_cmax = get_permutation(_dataA=dataA,
-                                _dataB=dataB,
-                                statistic=lambda x: apply(x, np.max),
-                                nsamples=n)
+n = 10000
+perm_cmax = get_permutation(_dataA=dataA,
+                            _dataB=dataB,
+                            statistic=lambda x: apply(x, np.max),
+                            nsamples=n)
 
-    cis_cmax = get_cis2(sampleA=perm_cmax[:, :49],
-                        sampleB=perm_cmax[:, 49:],
-                        origA=apply(dataA, np.max),
-                        origB=apply(dataB, np.max))
-    print(cis_cmax)
+cis_cmax = get_cis2(sampleA=perm_cmax[:, :49],
+                    sampleB=perm_cmax[:, 49:],
+                    origA=apply(dataA, np.max),
+                    origB=apply(dataB, np.max))
+print(cis_cmax)
 """
