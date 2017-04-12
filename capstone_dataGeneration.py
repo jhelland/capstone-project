@@ -112,10 +112,7 @@ for i in range(len(estA[0, :])):
 ###############################################
 
 n = 10000
-
-
-
-
+'''
 
 bootA_cmax = get_bootstrap(normData1, lambda x: apply(x, np.max), n)
 bootB_cmax = get_bootstrap(normData2, lambda x: apply(x, np.max), n)
@@ -201,13 +198,16 @@ boot_auc_star = [np.concatenate([boot_auc_starA[0], boot_auc_starB[0]]),
 
 mydata[10:15, 2:6] = get_cis(boot_auc_star)
 mydata[14, 2:6] = np.exp(mydata[14, 2:6])
-
+'''
 #################
 
 #e^k
+'''
+normData1 = np.concatenate((normData1[:, 3:8], normData2[:, 3:8]), 1)
 
-boot_kA = get_bootstrap(normData1[:, :5].T, lambda x: get_k(times[3:8], x), n)
-boot_kB = get_bootstrap(normData1[:, 5:].T, lambda x: get_k(times[3:8], x), n)
+fn = lambda x: get_k(times[3:8], x)
+boot_kA = get_bootstrap(normData1[:, :5].T, lambda x: apply(x, fn, axis=1), n)
+boot_kB = get_bootstrap(normData1[:, 5:].T, lambda x: apply(x, fn, axis=1), n)
 
 boot_k = [np.concatenate([boot_kA[0], boot_kB[0]]),
           np.concatenate([boot_kA[1], boot_kB[1]], axis=1)]
@@ -216,11 +216,14 @@ mydata[15:20, 2:6] = get_cis(boot_k)
 mydata[19, 2:6] = np.exp(mydata[19, 2:6])
 
 ###############
-
+'''
 # C
+normData1 = np.concatenate((normData1[:, 3:8], normData2[:, 3:8]), 1)
 
-boot_CA = get_bootstrap(normData1[:, :5].T, lambda x: get_C(times[3:8], x), n)
-boot_CB = get_bootstrap(normData1[:, 5:].T, lambda x: get_C(times[3:8], x), n)
+fn2 = lambda x: get_C(times[3:8], x)
+
+boot_CA = get_bootstrap(normData1[:, :5].T, lambda x: apply(x, fn2, axis=1), n)
+boot_CB = get_bootstrap(normData1[:, 5:].T, lambda x: apply(x, fn2, axis=1), n)
 
 boot_C = [np.concatenate([boot_CA[0], boot_CB[0]]),
           np.concatenate([boot_CA[1], boot_CB[1]], axis=1)]
@@ -229,7 +232,7 @@ mydata[20:25, 2:6] = get_cis(boot_C)
 mydata[24, 2:6] = np.exp(mydata[24, 2:6])
 
 ###################################################################################
-
+'''
 data_mat = np.concatenate((dataA_mat, dataB_mat), 1)
 
 n = 1000
@@ -262,6 +265,7 @@ mydata[14, 6:8] = np.exp(mydata[14, 6:8])
 ####################
 
 # e^k
+
 perm_k = get_permutation(dataA_mat[:, 3:8], dataB_mat[:, 3:8], lambda x: np.exp(-apply(x, lambda y: get_k(times[3:8], y), 0)), n)
 
 cis_k = get_cis2(perm_k[:, 0:50], perm_k[:, 50:100], np.exp(-apply(dataA_mat[:, 3:8], lambda x: get_k(times[3:8], x), 0)), np.exp(-apply(dataB_mat[:, 3:8], lambda x: get_k(times[3:8], x), 0)))
@@ -280,6 +284,7 @@ mydata[24, 6:8] = np.exp(mydata[24, 6:8])
 with open('Intervals.csv', 'a') as fout:
     np.savetxt(fout, mydata, delimiter=",")
 
+'''
 
 
 

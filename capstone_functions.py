@@ -201,7 +201,7 @@ def bootci_method2(orig, data):
     ]
 
 
-def get_bootstrap(data, statistic, n_samples=10000):
+def get_bootstrap(data, statistic, n_samples):
 
     t0 = statistic(data)
     sample_size = data.shape[0]
@@ -211,18 +211,18 @@ def get_bootstrap(data, statistic, n_samples=10000):
         sample = np.array([data[j] for j in indices])
         boot_sample[i] = statistic(sample)
 
-    return statistic(data), boot_sample
+    return t0, boot_sample
 
 
 def get_cis(sample):
 
     cis = np.zeros((5, 4))
 
-    sampleA_t = sample[1][:, :49]
-    sampleB_t = sample[1][:, 49:]
+    sampleA_t = sample[1][:, :50]
+    sampleB_t = sample[1][:, 50:]
 
-    sampleA_t0 = sample[0][:49]
-    sampleB_t0 = sample[0][49:]
+    sampleA_t0 = sample[0][:50]
+    sampleB_t0 = sample[0][50:]
 
     # median ratio
     Rmed = apply(sampleA_t / sampleB_t, np.median)
